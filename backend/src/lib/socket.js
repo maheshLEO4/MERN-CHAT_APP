@@ -2,26 +2,34 @@ import { Server } from "socket.io";
 import http from "http";
 import express from "express";
 
-// Express app setup for Socket.IO server
 const app = express();
 const server = http.createServer(app);
 
+const userSocketMap = {};
+
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173"], // Frontend URL
+    origin: ["http://localhost:5173"],
   },
 });
 
-// Used to store online users and map userId to socketId
-const userSocketMap = {}; // {userId: socketId}
+export function getReceiverSocketId(userId) {
+  return userSocketMap[userId];
+}
 
 io.on("connection", (socket) => {
   console.log("A user connected", socket.id);
 
   const userId = socket.handshake.query.userId;
-  if (userId) userSocketMap[userId] = socket.id;
+  
+  if (!userId) {
+    console.error("No userId provided!");
+    socket.disconnect();
+    return;
+  }
 
-  // Emit updated list of online users to all connected clients
+  userSocketMap[userId] = socket.id;
+
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
   socket.on("disconnect", () => {
@@ -31,5 +39,4 @@ io.on("connection", (socket) => {
   });
 });
 
-// Export both the io instance and the server
 export { io, app, server };
