@@ -6,7 +6,6 @@ export const protectRoute = async (req, res, next) => {
     const token = req.cookies.jwt;
 
     if (!token) {
-      // Make sure to let the CORS middleware apply headers first
       return res.status(401).json({ message: "Unauthorized - No Token Provided" });
     }
 
