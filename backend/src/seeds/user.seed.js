@@ -1,11 +1,12 @@
 import { config } from "dotenv";
 import { connectDB } from "../lib/db.js";
 import User from "../models/user.model.js";
+import bcrypt from "bcryptjs"; // 💥 Added this!
 
-config();
+config(); // Load environment variables from .env
 
+// 🎯 Your sample users
 const seedUsers = [
-  // Female Users
   {
     email: "emma.thompson@example.com",
     fullName: "Emma Thompson",
@@ -54,8 +55,6 @@ const seedUsers = [
     password: "123456",
     profilePic: "https://randomuser.me/api/portraits/women/8.jpg",
   },
-
-  // Male Users
   {
     email: "james.anderson@example.com",
     fullName: "James Anderson",
@@ -100,16 +99,35 @@ const seedUsers = [
   },
 ];
 
+// 🚀 Main seeding function
 const seedDatabase = async () => {
   try {
+    console.log("🔌 Connecting to Database...");
     await connectDB();
+    console.log("✅ Database Connected!");
 
-    await User.insertMany(seedUsers);
-    console.log("Database seeded successfully");
+    console.log("🧹 Deleting existing users...");
+    await User.deleteMany({});
+    console.log("✅ Old Users Deleted!");
+
+    console.log("🔒 Hashing passwords...");
+    const hashedSeedUsers = await Promise.all(
+      seedUsers.map(async (user) => ({
+        ...user,
+        password: await bcrypt.hash(user.password, 10),
+      }))
+    );
+
+    console.log("🌱 Seeding new users...");
+    const result = await User.insertMany(hashedSeedUsers);
+    console.log(`🎉 Successfully inserted ${result.length} users!`);
+
+    process.exit(0); // 👋 Exit after done
   } catch (error) {
-    console.error("Error seeding database:", error);
+    console.error("💥 Error seeding database:", error);
+    process.exit(1);
   }
 };
 
-// Call the function
+// 🏁 Run it!
 seedDatabase();

@@ -21,10 +21,15 @@ export const signup = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Set a default profile picture from your application's assets
+    // This assumes you have a public/images directory with default-avatar.png
+    const defaultProfilePic = "avatar/avatar.png";
+
     const newUser = new User({
       fullName,
       email,
       password: hashedPassword,
+      profilePic:"/avatar/avatar.png", // Set default profile pic
     });
 
     if (newUser) {
